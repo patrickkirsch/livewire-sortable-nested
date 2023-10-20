@@ -4,6 +4,10 @@ if (typeof window.livewire === 'undefined') {
     throw 'Livewire Sortable Plugin: window.livewire is undefined. Make sure @livewireScripts is placed above this script include'
 }
 
+if (typeof window.livewire === 'undefined') {
+    throw 'Livewire Sortable Plugin: window.livewire is undefined. Make sure @livewireScripts is placed above this script include'
+}
+
 window.livewire.directive('sortable-group', (el, directive, component) => {
     if (directive.modifiers.includes('item-group')) {
         // This will take care of new items added from Livewire during runtime.
@@ -13,10 +17,16 @@ window.livewire.directive('sortable-group', (el, directive, component) => {
     // Only fire the rest of this handler on the "root" directive.
     if (directive.modifiers.length > 0) return
 
-    let options = { draggable: '[wire\\:sortable-group\\.item]' }
+    let options = {
+        draggable: '[wire\\:sortable-group\\.item]',
+        mirror: {
+            constrainDimensions: true,
+        },
+    }
+
 
     if (el.querySelector('[wire\\:sortable-group\\.handle]')) {
-        options.handle ='[wire\\:sortable-group\\.handle]'
+        options.handle = '[wire\\:sortable-group\\.handle]'
     }
 
     const sortable = el.livewire_sortable = new Sortable([], options);
@@ -28,7 +38,7 @@ window.livewire.directive('sortable-group', (el, directive, component) => {
             el.querySelectorAll('[wire\\:sortable-group\\.item-group]').forEach((el, index) => {
                 let items = []
                 el.querySelectorAll('[wire\\:sortable-group\\.item]').forEach((el, index) => {
-                    items.push({ order: index + 1, value: el.getAttribute('wire:sortable-group.item')})
+                    items.push({order: index + 1, value: el.getAttribute('wire:sortable-group.item')})
                 })
 
                 groups.push({
@@ -47,10 +57,25 @@ window.livewire.directive('sortable', (el, directive, component) => {
     // Only fire this handler on the "root" directive.
     if (directive.modifiers.length > 0) return
 
-    let options = { draggable: '[wire\\:sortable\\.item]' }
+    let key = el.getAttribute('wire:sortable.key');
+    let draggable = '[wire\\:sortable\\.item]';
+    let handle = '[wire\\:sortable\\.handle]';
 
-    if (el.querySelector('[wire\\:sortable\\.handle]')) {
-        options.handle ='[wire\\:sortable\\.handle]'
+    if (key) {
+        let keyAttr = '[wire\\:sortable\\.key="' + key + '"]';
+        draggable += keyAttr;
+        handle += keyAttr;
+    }
+
+    let options = {
+        draggable: draggable,
+        mirror: {
+            constrainDimensions: true,
+        }
+    }
+
+    if (el.querySelector(handle)) {
+        options.handle = handle;
     }
 
     const sortable = new Sortable(el, options);
@@ -59,8 +84,8 @@ window.livewire.directive('sortable', (el, directive, component) => {
         setTimeout(() => {
             let items = []
 
-            el.querySelectorAll('[wire\\:sortable\\.item]').forEach((el, index) => {
-                items.push({ order: index + 1, value: el.getAttribute('wire:sortable.item')})
+            el.querySelectorAll(draggable).forEach((el, index) => {
+                items.push({order: index + 1, value: el.getAttribute('wire:sortable.item')})
             })
 
             component.call(directive.method, items)
